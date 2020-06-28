@@ -17,7 +17,7 @@ export class D3Charts extends PureComponent {
 
   changeData = () => {
     this.setState({
-      bar: getBarNameValueData(),
+      barNameValue: getBarNameValueData(),
     });
   };
 

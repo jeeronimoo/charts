@@ -9,7 +9,12 @@ export class BarNameValueChart extends PureComponent {
   }
 
   componentDidUpdate = () => {
+    this.removeChart();
     this.renderChart();
+  };
+
+  removeChart = () => {
+    d3.select(this.svgRef.current).select("g").remove();
   };
 
   renderChart = () => {
@@ -38,6 +43,11 @@ export class BarNameValueChart extends PureComponent {
       .rangeRound([0, plotWidth])
       .padding(0.4);
 
+    // const color = d3
+    //   .scaleLinear()
+    //   .domain([yMinDomain, yMaxDomain])
+    //   .range(["steelblue", "#378b8c"]);
+
     // X Axis
     svg
       .append("g")
@@ -53,8 +63,7 @@ export class BarNameValueChart extends PureComponent {
     // prettier-ignore
     svg
       .append('g')
-      .call(d3.axisLeft(yScale)
-      .ticks(8))
+      .call(d3.axisLeft(yScale))
 
     const bars = svg.selectAll("rect").data(data);
 
@@ -64,7 +73,12 @@ export class BarNameValueChart extends PureComponent {
     bars
       .enter()
       .append("rect")
+      // .transition()
+      // .duration(500)
+      // .ease(d3.easeElasticIn)
+      // .merge(bars)
       .attr("fill", "steelblue")
+      // .attr("fill", (d) => color(d.value))
       .attr("width", xScale.bandwidth())
       .attr("height", (d) => plotHeight - yScale(d.value))
       .attr("x", (d, i) => xScale(i))
