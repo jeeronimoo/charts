@@ -5,7 +5,7 @@ import { Button, ButtonGroup } from "react-bootstrap";
 
 export class D3Charts extends PureComponent {
   state = {
-    updateTime: 2000,
+    updateTime: 5000,
     barNameValue: getBarNameValueData(),
   };
 

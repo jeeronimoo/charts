@@ -1,5 +1,6 @@
 import React, { createRef, PureComponent } from "react";
 import * as d3 from "d3";
+import "./style.css";
 
 export class BarNameValueChart extends PureComponent {
   svgRef = createRef();
@@ -30,7 +31,7 @@ export class BarNameValueChart extends PureComponent {
     };
   };
 
-  renderChart = () => {
+  getScales = () => {
     const { data } = this.props;
     const {
       plotWidth,
@@ -38,11 +39,6 @@ export class BarNameValueChart extends PureComponent {
       yMaxDomain,
       yMinDomain,
     } = this.getMainCalculations();
-
-    const plot = d3
-      .select(this.svgRef.current)
-      .append("g")
-      .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
     const yScale = d3
       .scaleLinear()
@@ -55,13 +51,29 @@ export class BarNameValueChart extends PureComponent {
       .rangeRound([0, plotWidth])
       .padding(0.4);
 
+    return {
+      xScale,
+      yScale,
+    };
+  };
+
+  renderChart = () => {
+    const { data } = this.props;
+    const { plotHeight } = this.getMainCalculations();
+    const { xScale, yScale } = this.getScales();
+
+    this.plot = d3
+      .select(this.svgRef.current)
+      .append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
     // const color = d3
     //   .scaleLinear()
     //   .domain([yMinDomain, yMaxDomain])
     //   .range(["steelblue", "#378b8c"]);
 
     // X Axis
-    plot
+    this.plot
       .append("g")
       .attr("class", "xAxis")
       .attr("transform", `translate(0,${plotHeight})`)
@@ -74,15 +86,13 @@ export class BarNameValueChart extends PureComponent {
 
     // Y Axis
     // prettier-ignore
-    plot
+    this.plot
       .append('g')
       .attr('class', 'yAxis')
       .call(d3.axisLeft(yScale));
 
     // Bars
-    const bars = plot.selectAll("rect").data(data);
-
-    bars.exit().attr("fill", "green").remove();
+    const bars = this.plot.selectAll("rect").data(data);
 
     bars
       .enter()
@@ -91,12 +101,44 @@ export class BarNameValueChart extends PureComponent {
       // .join("rect")
       // .merge(bars)
       .attr("fill", "steelblue")
-      .attr("opacity", "0.7")
+      .attr("opacity", "0.6")
       // .attr("fill", (d) => color(d.value))
       .attr("width", xScale.bandwidth())
       .attr("height", (d) => plotHeight - yScale(d.value))
       .attr("x", (d, i) => xScale(i))
-      .attr("y", (d) => yScale(d.value));
+      .attr("y", (d) => yScale(d.value))
+      .on("mouseover", this.handleMouseOver)
+      .on("mouseout", this.handleMouseOut);
+  };
+
+  handleMouseOver = (d, i, group) => {
+    const { data } = this.props;
+    const { xScale, yScale } = this.getScales();
+
+    this.plot
+      .selectAll("rect")
+      .data(data)
+      .attr("opacity", (d, idx) => (idx === i ? "1" : "0.6"));
+
+    const xOffset = d.value > 99 ? 3 : 0;
+
+    this.plot
+      .append("text")
+      .attr("id", "tooltip")
+      // .attr("id", `${d.name}-${d.value}`)
+      .attr("x", xScale(i) - xOffset)
+      .attr("y", yScale(d.value) - 5)
+      .text(d.value);
+
+    this.plot.select(`#${d.name}-${d.value}`);
+  };
+
+  handleMouseOut = (d, i, group) => {
+    const { data } = this.props;
+
+    this.plot.selectAll("rect").data(data).attr("opacity", "0.6");
+
+    this.plot.selectAll(`#tooltip`).remove();
   };
 
   updateChart = () => {
@@ -108,7 +150,7 @@ export class BarNameValueChart extends PureComponent {
       yMinDomain,
     } = this.getMainCalculations();
 
-    const plot = d3.select(this.svgRef.current).select("g");
+    this.plot.selectAll(`#tooltip`).remove();
 
     const yScale = d3
       .scaleLinear()
@@ -122,7 +164,7 @@ export class BarNameValueChart extends PureComponent {
       .padding(0.4);
 
     // X Axis
-    plot
+    this.plot
       .select(".xAxis")
       .transition()
       .duration(500)
@@ -136,19 +178,20 @@ export class BarNameValueChart extends PureComponent {
 
     // Y Axis
     // prettier-ignore
-    plot
+    this.plot
         .select('.yAxis')
         .transition()
         .duration(500)
         .call(d3.axisLeft(yScale));
 
-    const bars = plot.selectAll("rect").data(data);
+    const bars = this.plot.selectAll("rect").data(data);
 
     bars.exit().remove();
 
     bars
       .transition()
       .duration(1000)
+      .attr("opacity", "0.6")
       .attr("height", (d) => plotHeight - yScale(d.value))
       .attr("y", (d) => yScale(d.value));
   };
