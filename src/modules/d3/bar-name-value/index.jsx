@@ -76,16 +76,22 @@ export class BarNameValueChart extends PureComponent {
     // prettier-ignore
     plot
       .append('g')
-        .attr('class', 'yAxis')
+      .attr('class', 'yAxis')
       .call(d3.axisLeft(yScale));
 
     // Bars
-    plot
-      .selectAll("rect")
-      .data(data)
+    const bars = plot.selectAll("rect").data(data);
+
+    bars.exit().attr("fill", "green").remove();
+
+    bars
       .enter()
       .append("rect")
+      // FIXME: 'enter()' doesnt work properly
+      // .join("rect")
+      // .merge(bars)
       .attr("fill", "steelblue")
+      .attr("opacity", "0.7")
       // .attr("fill", (d) => color(d.value))
       .attr("width", xScale.bandwidth())
       .attr("height", (d) => plotHeight - yScale(d.value))
@@ -142,11 +148,8 @@ export class BarNameValueChart extends PureComponent {
 
     bars
       .transition()
-      .duration(500)
-      .attr("fill", "steelblue")
-      .attr("width", xScale.bandwidth())
+      .duration(1000)
       .attr("height", (d) => plotHeight - yScale(d.value))
-      .attr("x", (d, i) => xScale(i))
       .attr("y", (d) => yScale(d.value));
   };
 
