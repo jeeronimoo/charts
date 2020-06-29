@@ -9,12 +9,7 @@ export class BarNameValueChart extends PureComponent {
   }
 
   componentDidUpdate = () => {
-    this.removeChart();
-    this.renderChart();
-  };
-
-  removeChart = () => {
-    d3.select(this.svgRef.current).select("g").remove();
+    this.updateChart();
   };
 
   renderChart = () => {
@@ -27,7 +22,7 @@ export class BarNameValueChart extends PureComponent {
     const dataMinValue = d3.min(data.map((el) => el.value)) || 0;
     const yMinDomain = dataMinValue > 0 ? 0 : dataMinValue;
 
-    const svg = d3
+    const plot = d3
       .select(this.svgRef.current)
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
@@ -49,8 +44,9 @@ export class BarNameValueChart extends PureComponent {
     //   .range(["steelblue", "#378b8c"]);
 
     // X Axis
-    svg
+    plot
       .append("g")
+      .attr("class", "xAxis")
       .attr("transform", `translate(0,${plotHeight})`)
       .call(d3.axisBottom(xScale).tickFormat((i) => data[i].name))
       .selectAll("text")
@@ -61,24 +57,77 @@ export class BarNameValueChart extends PureComponent {
 
     // Y Axis
     // prettier-ignore
-    svg
+    plot
       .append('g')
-      .call(d3.axisLeft(yScale))
+        .attr('class', 'yAxis')
+      .call(d3.axisLeft(yScale));
 
-    const bars = svg.selectAll("rect").data(data);
+    // Bars
+    plot
+      .selectAll("rect")
+      .data(data)
+      .enter()
+      .append("rect")
+      .attr("fill", "steelblue")
+      // .attr("fill", (d) => color(d.value))
+      .attr("width", xScale.bandwidth())
+      .attr("height", (d) => plotHeight - yScale(d.value))
+      .attr("x", (d, i) => xScale(i))
+      .attr("y", (d) => yScale(d.value));
+  };
+
+  updateChart = () => {
+    const { data, width, height } = this.props;
+
+    const plotWidth = width - margin.left - margin.right;
+    const plotHeight = height - margin.top - margin.bottom;
+
+    const yMaxDomain = d3.max(data.map((el) => el.value)) || 0;
+    const dataMinValue = d3.min(data.map((el) => el.value)) || 0;
+    const yMinDomain = dataMinValue > 0 ? 0 : dataMinValue;
+
+    const plot = d3.select(this.svgRef.current).select("g");
+
+    const yScale = d3
+      .scaleLinear()
+      .domain([yMinDomain, yMaxDomain])
+      .rangeRound([plotHeight, 0]);
+
+    const xScale = d3
+      .scaleBand()
+      .domain(d3.range(data.length))
+      .rangeRound([0, plotWidth])
+      .padding(0.4);
+
+    // X Axis
+    plot
+      .select(".xAxis")
+      .transition()
+      .duration(500)
+      .attr("transform", `translate(0,${plotHeight})`)
+      .call(d3.axisBottom(xScale).tickFormat((i) => data[i].name))
+      .selectAll("text")
+      .style("text-anchor", "end")
+      .attr("dx", "-10px")
+      .attr("dy", "-1px")
+      .attr("transform", "rotate(-45)");
+
+    // Y Axis
+    // prettier-ignore
+    plot
+        .select('.yAxis')
+        .transition()
+        .duration(500)
+        .call(d3.axisLeft(yScale));
+
+    const bars = plot.selectAll("rect").data(data);
 
     bars.exit().remove();
 
-    // Bars
     bars
-      .enter()
-      .append("rect")
-      // .transition()
-      // .duration(500)
-      // .ease(d3.easeElasticIn)
-      // .merge(bars)
+      .transition()
+      .duration(500)
       .attr("fill", "steelblue")
-      // .attr("fill", (d) => color(d.value))
       .attr("width", xScale.bandwidth())
       .attr("height", (d) => plotHeight - yScale(d.value))
       .attr("x", (d, i) => xScale(i))
