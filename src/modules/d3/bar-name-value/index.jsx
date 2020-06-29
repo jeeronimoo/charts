@@ -12,7 +12,7 @@ export class BarNameValueChart extends PureComponent {
     this.updateChart();
   };
 
-  renderChart = () => {
+  getMainCalculations = () => {
     const { data, width, height } = this.props;
 
     const plotWidth = width - margin.left - margin.right;
@@ -21,6 +21,23 @@ export class BarNameValueChart extends PureComponent {
     const yMaxDomain = d3.max(data.map((el) => el.value)) || 0;
     const dataMinValue = d3.min(data.map((el) => el.value)) || 0;
     const yMinDomain = dataMinValue > 0 ? 0 : dataMinValue;
+
+    return {
+      plotWidth,
+      plotHeight,
+      yMaxDomain,
+      yMinDomain,
+    };
+  };
+
+  renderChart = () => {
+    const { data } = this.props;
+    const {
+      plotWidth,
+      plotHeight,
+      yMaxDomain,
+      yMinDomain,
+    } = this.getMainCalculations();
 
     const plot = d3
       .select(this.svgRef.current)
@@ -77,14 +94,13 @@ export class BarNameValueChart extends PureComponent {
   };
 
   updateChart = () => {
-    const { data, width, height } = this.props;
-
-    const plotWidth = width - margin.left - margin.right;
-    const plotHeight = height - margin.top - margin.bottom;
-
-    const yMaxDomain = d3.max(data.map((el) => el.value)) || 0;
-    const dataMinValue = d3.min(data.map((el) => el.value)) || 0;
-    const yMinDomain = dataMinValue > 0 ? 0 : dataMinValue;
+    const { data } = this.props;
+    const {
+      plotWidth,
+      plotHeight,
+      yMaxDomain,
+      yMinDomain,
+    } = this.getMainCalculations();
 
     const plot = d3.select(this.svgRef.current).select("g");
 
