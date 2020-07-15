@@ -40,7 +40,6 @@ export class LineDateValueChart extends PureComponent {
   };
 
   getScales = () => {
-    const { data } = this.props;
     const {
       plotWidth,
       plotHeight,
@@ -68,14 +67,11 @@ export class LineDateValueChart extends PureComponent {
 
   renderChart = () => {
     const { data } = this.props;
-    // const { plotHeight } = this.getMainCalculations();
     const { xScale, yScale } = this.getScales();
 
     // Side effects
     if (this.plot) {
       // this.plot.selectAll(`#tooltip`).remove();
-      //
-      // this.updateAxes();
     } else {
       this.plot = d3
         .select(this.svgRef.current)
@@ -114,7 +110,9 @@ export class LineDateValueChart extends PureComponent {
       .attr("fill", "steelblue")
       .attr("cx", (d, i) => xScale(d.date))
       .attr("cy", (d) => yScale(d.value))
-      .attr("r", 5);
+      .attr("r", 5)
+      .append("title")
+      .text((d) => d.value);
   };
 
   renderAxes = () => {
@@ -137,8 +135,6 @@ export class LineDateValueChart extends PureComponent {
     // Y Axis
     this.plot.append("g").attr("class", "yAxis").call(d3.axisLeft(yScale));
   };
-
-  updateAxes = () => {};
 
   render() {
     const { width, height } = this.props;
