@@ -2,11 +2,14 @@ import React, { PureComponent } from "react";
 import { BarNameValueChart } from "./bar-name-value";
 import { getBarNameValueData } from "./bar-name-value/data";
 import { Button, ButtonGroup } from "react-bootstrap";
+import { LineDateValueChart } from "./line-date-value";
+import { lineDateValueData } from "./line-date-value/data";
 
 export class D3Charts extends PureComponent {
   state = {
     updateTime: 5000,
     barNameValue: getBarNameValueData(),
+    lineDateValue: lineDateValueData,
   };
 
   componentDidMount() {
@@ -85,6 +88,11 @@ export class D3Charts extends PureComponent {
           height={300}
           data={this.state.barNameValue}
         />
+        {/* <LineDateValueChart
+          width={300}
+          height={300}
+          data={this.state.lineDateValue}
+        /> */}
       </div>
     );
   }
