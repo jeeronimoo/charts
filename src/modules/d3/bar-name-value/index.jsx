@@ -10,7 +10,7 @@ export class BarNameValueChart extends PureComponent {
   }
 
   componentDidUpdate = () => {
-    this.updateChart();
+    this.renderChart();
   };
 
   getMainCalculations = () => {
@@ -57,20 +57,10 @@ export class BarNameValueChart extends PureComponent {
     };
   };
 
-  renderChart = () => {
+  renderAxes = () => {
     const { data } = this.props;
     const { plotHeight } = this.getMainCalculations();
     const { xScale, yScale } = this.getScales();
-
-    this.plot = d3
-      .select(this.svgRef.current)
-      .append("g")
-      .attr("transform", `translate(${margin.left}, ${margin.top})`);
-
-    // const color = d3
-    //   .scaleLinear()
-    //   .domain([yMinDomain, yMaxDomain])
-    //   .range(["steelblue", "#378b8c"]);
 
     // X Axis
     this.plot
@@ -90,25 +80,62 @@ export class BarNameValueChart extends PureComponent {
       .append('g')
       .attr('class', 'yAxis')
       .call(d3.axisLeft(yScale));
+  };
+
+  updateAxes = () => {
+    const { data } = this.props;
+    const { xScale, yScale } = this.getScales();
+
+    // X Axis
+    this.plot
+      .select(".xAxis")
+      .transition()
+      .duration(500)
+      .call(d3.axisBottom(xScale).tickFormat((i) => data[i].name));
+
+    // Y Axis
+    // prettier-ignore
+    this.plot
+      .select('.yAxis')
+      .transition()
+      .duration(500)
+      .call(d3.axisLeft(yScale));
+  };
+
+  renderChart = () => {
+    const { data } = this.props;
+    const { plotHeight } = this.getMainCalculations();
+    const { xScale, yScale } = this.getScales();
+
+    // Side effects
+    if (this.plot) {
+      this.plot.selectAll(`#tooltip`).remove();
+
+      this.updateAxes();
+    } else {
+      this.plot = d3
+        .select(this.svgRef.current)
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+      this.renderAxes();
+    }
 
     // Bars
     const bars = this.plot.selectAll("rect").data(data);
 
     bars
-      .enter()
-      .append("rect")
-      // FIXME: 'enter()' doesnt work properly
-      // .join("rect")
-      // .merge(bars)
+      .join("rect")
+      .on("mouseover", this.handleMouseOver)
+      .on("mouseout", this.handleMouseOut)
+      .transition()
+      .duration(1000)
       .attr("fill", "steelblue")
       .attr("opacity", "0.6")
-      // .attr("fill", (d) => color(d.value))
       .attr("width", xScale.bandwidth())
       .attr("height", (d) => plotHeight - yScale(d.value))
       .attr("x", (d, i) => xScale(i))
-      .attr("y", (d) => yScale(d.value))
-      .on("mouseover", this.handleMouseOver)
-      .on("mouseout", this.handleMouseOut);
+      .attr("y", (d) => yScale(d.value));
   };
 
   handleMouseOver = (d, i, group) => {
@@ -125,7 +152,6 @@ export class BarNameValueChart extends PureComponent {
     this.plot
       .append("text")
       .attr("id", "tooltip")
-      // .attr("id", `${d.name}-${d.value}`)
       .attr("x", xScale(i) - xOffset)
       .attr("y", yScale(d.value) - 5)
       .text(d.value);
@@ -139,61 +165,6 @@ export class BarNameValueChart extends PureComponent {
     this.plot.selectAll("rect").data(data).attr("opacity", "0.6");
 
     this.plot.selectAll(`#tooltip`).remove();
-  };
-
-  updateChart = () => {
-    const { data } = this.props;
-    const {
-      plotWidth,
-      plotHeight,
-      yMaxDomain,
-      yMinDomain,
-    } = this.getMainCalculations();
-
-    this.plot.selectAll(`#tooltip`).remove();
-
-    const yScale = d3
-      .scaleLinear()
-      .domain([yMinDomain, yMaxDomain])
-      .rangeRound([plotHeight, 0]);
-
-    const xScale = d3
-      .scaleBand()
-      .domain(d3.range(data.length))
-      .rangeRound([0, plotWidth])
-      .padding(0.4);
-
-    // X Axis
-    this.plot
-      .select(".xAxis")
-      .transition()
-      .duration(500)
-      .attr("transform", `translate(0,${plotHeight})`)
-      .call(d3.axisBottom(xScale).tickFormat((i) => data[i].name))
-      .selectAll("text")
-      .style("text-anchor", "end")
-      .attr("dx", "-10px")
-      .attr("dy", "-1px")
-      .attr("transform", "rotate(-45)");
-
-    // Y Axis
-    // prettier-ignore
-    this.plot
-        .select('.yAxis')
-        .transition()
-        .duration(500)
-        .call(d3.axisLeft(yScale));
-
-    const bars = this.plot.selectAll("rect").data(data);
-
-    bars.exit().remove();
-
-    bars
-      .transition()
-      .duration(1000)
-      .attr("opacity", "0.6")
-      .attr("height", (d) => plotHeight - yScale(d.value))
-      .attr("y", (d) => yScale(d.value));
   };
 
   render() {
