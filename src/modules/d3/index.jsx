@@ -88,11 +88,11 @@ export class D3Charts extends PureComponent {
           height={300}
           data={this.state.barNameValue}
         />
-        {/* <LineDateValueChart
+        <LineDateValueChart
           width={300}
           height={300}
           data={this.state.lineDateValue}
-        /> */}
+        />
       </div>
     );
   }

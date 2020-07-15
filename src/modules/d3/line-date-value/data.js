@@ -2,19 +2,19 @@ import { getRandomNumber } from "../../utils";
 
 export const lineDateValueData = [
   {
-    date: new Date(2019, 1, 10),
+    date: new Date(2019, 1, 10).getTime(),
     value: 20,
   },
   {
-    date: new Date(2019, 1, 11),
+    date: new Date(2019, 1, 11).getTime(),
     value: 30,
   },
   {
-    date: new Date(2019, 1, 12),
+    date: new Date(2019, 1, 12).getTime(),
     value: 25,
   },
   {
-    date: new Date(2019, 1, 13),
+    date: new Date(2019, 1, 13).getTime(),
     value: 40,
   },
 ];
